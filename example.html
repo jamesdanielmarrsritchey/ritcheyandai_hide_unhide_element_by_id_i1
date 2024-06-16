@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Example</title>
+<style>
+#output {
+	display: inline;
+}
+</style>
+</head>
+<body>
+<div id='output'>Click to hide this element.</div>
+<button id='output_button'>Toggle</button>
+<script src="function.js"></script>
+<script>
+document.querySelector("#output_button").addEventListener("click", function() {
+    const element = document.querySelector("#output_button");
+    if (element) {
+        toggleDisplay('output');
+    }
+});
+</script>
+</body>
+</html>

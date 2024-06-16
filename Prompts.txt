@@ -1,0 +1,122 @@
+jamesdanielmarrsritchey: Using Javascript, write a function which accepts an element ID as an argument. For that element, it checks if there is a data attribute named "data-default-display-value". If there isn't, it creates the data attribute using the current display value for that element. If the attribute already exists, or once it has been created, the function will check the display value. If it's not "none", it will change it to "none". If it is "none", it will change it to the value that is stored in the data attribute.
+
+GitHub Copilot: ```javascript
+function toggleDisplay(elementId) {
+  // Get the element by its ID
+  const element = document.getElementById(elementId);
+
+  // Check if the element exists to avoid errors
+  if (!element) {
+    console.error('Element not found');
+    return;
+  }
+
+  // Check if the data-default-display-value attribute exists
+  if (!element.hasAttribute('data-default-display-value')) {
+    // If it doesn't exist, create it with the current display value
+    element.setAttribute('data-default-display-value', getComputedStyle(element).display);
+  }
+
+  // Toggle the display value
+  if (element.style.display !== 'none') {
+    // If the display is not 'none', change it to 'none'
+    element.style.display = 'none';
+  } else {
+    // If the display is 'none', change it back to the original display value
+    element.style.display = element.getAttribute('data-default-display-value');
+  }
+}
+```
+
+jamesdanielmarrsritchey: If the element originally has no display property set, will this correctly toggle between "none" , and no value?
+
+GitHub Copilot: The initial approach might not correctly toggle between "none" and no value (i.e., the default or initial display value) if the element originally has no explicit display property set in its style attribute. This is because `getComputedStyle(element).display` will return the computed display value (like "block", "inline", etc., depending on the type of element), not an empty string or null that would indicate no display property is set. When toggling back from "none", it would set the display to this computed value instead of removing the display property to revert to the default.
+
+To address this, we can modify the function to remove the display property (using `element.style.removeProperty('display')`) when we want to revert to the default display value. This way, if the element's display should be "block", "inline", etc., by default (based on its type and CSS), it will correctly revert to that value after being set to "none".
+
+Here's the revised function:
+
+```javascript
+function toggleDisplay(elementId) {
+  // Get the element by its ID
+  const element = document.getElementById(elementId);
+
+  // Check if the element exists to avoid errors
+  if (!element) {
+    console.error('Element not found');
+    return;
+  }
+
+  // Check if the data-default-display-value attribute exists
+  if (!element.hasAttribute('data-default-display-value')) {
+    // If it doesn't exist, create it with the current display value
+    // Use 'none' to indicate that the display property was not explicitly set
+    const currentDisplay = getComputedStyle(element).display;
+    element.setAttribute('data-default-display-value', currentDisplay === 'none' ? 'block' : ''); // Assuming 'block' as a generic fallback
+  }
+
+  // Toggle the display value
+  if (element.style.display !== 'none') {
+    // If the display is not 'none', change it to 'none'
+    element.style.display = 'none';
+  } else {
+    // If the display is 'none', change it back to the original display value or remove the property
+    const originalDisplay = element.getAttribute('data-default-display-value');
+    if (originalDisplay) {
+      element.style.display = originalDisplay;
+    } else {
+      // If the original display value was not explicitly set (stored as an empty string),
+      // remove the display property to revert to the default CSS or HTML display value
+      element.style.removeProperty('display');
+    }
+  }
+}
+```
+
+This approach ensures that the element can correctly toggle between "none" and its default display state, even if it originally had no display property explicitly set.
+
+jamesdanielmarrsritchey: This function shouldn't make assumptions that the default display value is "block". Instead, if there was no value, it should use '' as the data attribute value, and when toggling, if the data attribute value is '', it should remove the display property entirely.
+
+GitHub Copilot: Given the requirement to not make assumptions about the default display value and to use an empty string (`''`) as the indicator for no initial display property set, here's how the function can be adjusted:
+
+1. **Check for an existing `data-default-display-value` attribute**: If it doesn't exist, the function will set this attribute with the current computed display value. If the computed display value is anything other than 'none', indicating that the display property is not explicitly set in the style attribute, it will store an empty string (`''`) as the value.
+2. **Toggle the display property**: If the current display style is not 'none', it will be set to 'none'. If it is 'none', the function will check the `data-default-display-value`. If this attribute's value is an empty string, indicating that there was no initial display property set, it will remove the display property entirely to revert to the default CSS behavior. Otherwise, it will set the display to the stored value.
+
+Here's the revised function:
+
+```javascript
+function toggleDisplay(elementId) {
+  // Get the element by its ID
+  const element = document.getElementById(elementId);
+
+  // Check if the element exists to avoid errors
+  if (!element) {
+    console.error('Element not found');
+    return;
+  }
+
+  // Check if the data-default-display-value attribute exists
+  if (!element.hasAttribute('data-default-display-value')) {
+    // If it doesn't exist, create it with the current display value or an empty string
+    const currentDisplay = getComputedStyle(element).display;
+    const attributeValue = currentDisplay === 'none' ? '' : currentDisplay;
+    element.setAttribute('data-default-display-value', attributeValue);
+  }
+
+  // Toggle the display value
+  if (element.style.display !== 'none') {
+    // If the display is not 'none', change it to 'none'
+    element.style.display = 'none';
+  } else {
+    // If the display is 'none', revert to the original display value or remove the display property
+    const originalDisplay = element.getAttribute('data-default-display-value');
+    if (originalDisplay === '') {
+      element.style.removeProperty('display');
+    } else {
+      element.style.display = originalDisplay;
+    }
+  }
+}
+```
+
+This function now correctly handles the scenario where an element initially has no explicit display property set. It toggles between 'none' and the default display state without making assumptions about what the default display should be, using an empty string as a special indicator for such cases.
